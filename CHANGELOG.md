@@ -4,6 +4,15 @@
 
 バージョン番号は[Semantic Versioning](https://semver.org/lang/ja/)に従います。
 
+## [0.1.1] - 2026-08-18
+
+### 変更
+
+- Windows 64-bit向けリリースを単一実行ファイル`vj-controller-pro.exe`に変更
+- HTMLとバージョン情報を実行ファイルへ同梱
+- 実行ファイルの起動時に、同じフォルダへ`videos`フォルダを自動作成
+- `--version`オプションを追加
+
 ## [0.1.0] - 2026-08-18
 
 ### 追加
@@ -16,4 +25,5 @@
 - Python 3.10／3.13を対象としたCI
 - バージョン管理とタグ連動のGitHub Release自動作成
 
+[0.1.1]: https://github.com/ariki41/vj-controller-pro/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ariki41/vj-controller-pro/releases/tag/v0.1.0

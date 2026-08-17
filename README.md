@@ -35,10 +35,14 @@ python main.py
 ブラウザで以下のURLを開いてください。
 
 ```
-http://localhost:8000/static/control.html
+http://localhost:8000/static/index.html
 ```
 
-もしアクセスできない場合は、上記URLの`control.html`の部分を実際のファイル名(`index.html`)に読み替えてみてください。
+### Windows実行ファイル
+
+[GitHub Releases](https://github.com/ariki41/vj-controller-pro/releases)から`vj-controller-pro.exe`をダウンロードして起動できます。Pythonのインストールは不要です。
+
+初回起動時に、実行ファイルと同じフォルダへ`videos`フォルダが作成されます。
 
 ## 5. 使い方の要点
 - 左上の「window (画面投影)」ボタンで投影用ウィンドウが開きます。これをプロジェクター側のディスプレイにドラッグしてフルスクリーン表示してください。
@@ -56,4 +60,4 @@ http://localhost:8000/static/control.html
 
 現在のバージョンは[VERSION](VERSION)、変更内容は[CHANGELOG.md](CHANGELOG.md)で管理します。
 
-公開済みバージョンは[GitHub Releases](https://github.com/ariki41/vj-controller-pro/releases)から確認できます。
+公開済みバージョンは[GitHub Releases](https://github.com/ariki41/vj-controller-pro/releases)から確認できます。カスタムRelease assetとして添付する配布物は、Windows 64-bit向けの`vj-controller-pro.exe`のみです。
