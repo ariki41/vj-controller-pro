@@ -51,3 +51,9 @@ http://localhost:8000/static/control.html
 ## 7. 開発への参加
 
 ブランチの作成、動作確認、Pull Request、レビューのルールは[CONTRIBUTING.md](CONTRIBUTING.md)を参照してください。
+
+## 8. バージョンとリリース
+
+現在のバージョンは[VERSION](VERSION)、変更内容は[CHANGELOG.md](CHANGELOG.md)で管理します。
+
+公開済みバージョンは[GitHub Releases](https://github.com/ariki41/vj-controller-pro/releases)から確認できます。

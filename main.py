@@ -6,9 +6,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import yt_dlp
 
-app = FastAPI()
-
 OS_DIR = os.path.dirname(os.path.abspath(__file__))
+VERSION_FILE = os.path.join(OS_DIR, "VERSION")
+with open(VERSION_FILE, encoding="utf-8") as version_file:
+    APP_VERSION = version_file.read().strip()
+
+app = FastAPI(title="VJ Controller Pro", version=APP_VERSION)
+
 VIDEO_DIR = os.path.join(OS_DIR, "videos")
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
