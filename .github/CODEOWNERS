@@ -1,0 +1,8 @@
+# すべての変更について、現在のリポジトリ管理者へレビューを依頼します。
+# メンバー追加後は、必要に応じて領域別のGitHubユーザーまたはチームを追加してください。
+* @ariki41
+
+# 設定例:
+# /main.py @organization/backend-team
+# /public/ @organization/frontend-team
+# /.github/ @organization/maintainers

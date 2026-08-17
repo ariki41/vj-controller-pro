@@ -1,19 +1,29 @@
 import os
 import shutil
+import sys
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import yt_dlp
 
-app = FastAPI()
+RESOURCE_DIR = os.path.dirname(os.path.abspath(__file__))
+APPLICATION_DIR = (
+    os.path.dirname(sys.executable)
+    if getattr(sys, "frozen", False)
+    else RESOURCE_DIR
+)
 
-OS_DIR = os.path.dirname(os.path.abspath(__file__))
-VIDEO_DIR = os.path.normpath(os.path.join(OS_DIR, "videos"))
-PUBLIC_DIR = os.path.normpath(os.path.join(OS_DIR, "public"))
+VERSION_FILE = os.path.join(RESOURCE_DIR, "VERSION")
+with open(VERSION_FILE, encoding="utf-8") as version_file:
+    APP_VERSION = version_file.read().strip()
+
+app = FastAPI(title="VJ Controller Pro", version=APP_VERSION)
+
+VIDEO_DIR = os.path.normpath(os.path.join(APPLICATION_DIR, "videos"))
+PUBLIC_DIR = os.path.normpath(os.path.join(RESOURCE_DIR, "public"))
 
 os.makedirs(VIDEO_DIR, exist_ok=True)
-os.makedirs(PUBLIC_DIR, exist_ok=True)
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
 app.mount("/static", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
@@ -39,9 +49,6 @@ def download_video(url: str):
         'noplaylist': True,
         'quiet': True,
         'progress_hooks': [my_hook],
-        'nocheckcertificate': True,
-        'rm_cache_dir': True,
-        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -73,8 +80,11 @@ async def upload_video(file: UploadFile = File(...)):
     return {"status": "success", "filename": file.filename}
 
 if __name__ == "__main__":
-    print("\n" + "="*60)
-    print("VJ Controller Pro 起動準備完了")
-    print(f"プレーヤーURL➡ http://localhost:8000/static/control.html")
-    print("="*60 + "\n")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    if "--version" in sys.argv:
+        print(APP_VERSION)
+    else:
+        print("\n" + "="*60)
+        print("VJ Controller Pro 起動準備完了")
+        print("プレーヤーURL➡ http://localhost:8000/static/control.html")
+        print("="*60 + "\n")
+        uvicorn.run(app, host="0.0.0.0", port=8000)
