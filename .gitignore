@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Downloaded and uploaded media
+videos/*
+!videos/.gitkeep
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/

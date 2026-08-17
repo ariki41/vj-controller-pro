@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>VJ Stage Output</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #stageCanvas { width: 100vw; height: 100vh; object-fit: contain; }
+    #errorMsg { display: none; color: #fff; font-size: 16px; font-family: sans-serif; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    #debugBox { display: none; position: absolute; top: 8px; left: 8px; color: #0f0; font-size: 12px; font-family: monospace; background: rgba(0,0,0,0.6); padding: 6px 10px; white-space: pre; z-index: 9999; }
+    #debugBox.show { display: block; }
+  </style>
+</head>
+<body>
+
+  <canvas id="stageCanvas" width="1280" height="720"></canvas>
+  <div id="errorMsg">コントローラーと接続中...</div>
+  <div id="debugBox">init...</div>
+
+  <script>
+    const canvas = document.getElementById('stageCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const errorMsg = document.getElementById('errorMsg');
+    const debugBox = document.getElementById('debugBox');
+    const DEBUG = new URLSearchParams(location.search).has('debug');
+    if (DEBUG) debugBox.classList.add('show');
+
+    let isConnected = false;
+    let frameCount = 0;
+    let lastFrameAt = null;
+    let readySentCount = 0;
+    let pingCount = 0;
+
+    function updateDebug() {
+        const lines = [
+            'window.opener: ' + (window.opener ? 'あり' : 'なし(ここが「なし」ならopener断絶)'),
+            'READY送信回数: ' + readySentCount,
+            'PING送信回数: ' + pingCount,
+            'FRAME受信数: ' + frameCount,
+            '最終受信: ' + (lastFrameAt ? ((performance.now() - lastFrameAt).toFixed(0) + 'ms前') : '(まだ受信なし)')
+        ];
+        debugBox.textContent = lines.join('\n');
+    }
+    setInterval(updateDebug, 300);
+
+    function pingOpener() {
+        if (window.opener) {
+            try {
+                window.opener.postMessage({ type: 'STAGE_PING' }, '*');
+                pingCount++;
+            } catch (err) {
+                console.error('[stage] ping失敗:', err);
+            }
+        } else {
+            errorMsg.style.display = 'block';
+            errorMsg.innerHTML = 'コントローラーが閉じられました。<br>このウィンドウを閉じてください。';
+        }
+    }
+
+    console.log('[stage] loaded. opener=', window.opener);
+    // ロード直後に即接続通知を送る(pingの周期を待たず初回表示を早める)
+    if (window.opener) {
+        try {
+            window.opener.postMessage({ type: 'STAGE_READY' }, '*');
+            readySentCount++;
+            console.log('[stage] STAGE_READY sent');
+        } catch (err) { console.error('[stage] STAGE_READY送信失敗:', err); }
+    } else {
+        console.warn('[stage] window.opener がありません(ポップアップブロック等でopener断絶の可能性)');
+    }
+    setInterval(pingOpener, 500);
+
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'FRAME') {
+            frameCount++;
+            lastFrameAt = performance.now();
+            if (!isConnected) {
+                isConnected = true;
+                errorMsg.style.display = 'none';
+                console.log('[stage] 初回FRAME受信');
+            }
+            const bmp = e.data.bitmap;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+            bmp.close();
+        }
+    });
+  </script>
+</body>
+</html>
