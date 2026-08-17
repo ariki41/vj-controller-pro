@@ -47,3 +47,7 @@ http://localhost:8000/static/control.html
 
 ## 6. 終了方法
 起動したコマンドプロンプト/ターミナルの画面で `Ctrl + C` を押すとサーバーが停止します。
+
+## 7. 開発への参加
+
+ブランチの作成、動作確認、Pull Request、レビューのルールは[CONTRIBUTING.md](CONTRIBUTING.md)を参照してください。
