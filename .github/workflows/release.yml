@@ -13,8 +13,8 @@ concurrency:
 
 jobs:
   release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
+    name: Build and create GitHub Release
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -26,41 +26,56 @@ jobs:
           python-version: "3.10"
 
       - name: Verify tag and VERSION
-        shell: bash
+        shell: pwsh
         run: |
-          expected_tag="v$(tr -d '[:space:]' < VERSION)"
-          if [[ "${GITHUB_REF_NAME}" != "${expected_tag}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match VERSION (${expected_tag})."
-            exit 1
-          fi
+          $version = (Get-Content VERSION -Raw).Trim()
+          $expectedTag = "v$version"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
+            throw "Tag $env:GITHUB_REF_NAME does not match VERSION ($expectedTag)."
+          }
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt -r requirements-build.txt
 
-      - name: Validate application version
-        run: python -c "import main; assert main.app.version == open('VERSION', encoding='utf-8').read().strip()"
+      - name: Build executable
+        run: >-
+          python -m PyInstaller
+          --noconfirm
+          --clean
+          --onefile
+          --name vj-controller-pro
+          --add-data "public:public"
+          --add-data "VERSION:."
+          main.py
+
+      - name: Verify executable version
+        shell: pwsh
+        run: |
+          $expectedVersion = (Get-Content VERSION -Raw).Trim()
+          $actualVersion = (& .\dist\vj-controller-pro.exe --version | Out-String).Trim()
+          if ($actualVersion -ne $expectedVersion) {
+            throw "Executable version $actualVersion does not match VERSION $expectedVersion."
+          }
 
       - name: Create GitHub Release
-        shell: bash
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            echo "Release ${GITHUB_REF_NAME} already exists."
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "Release $env:GITHUB_REF_NAME already exists."
             exit 0
-          fi
+          }
 
-          release_options=(
-            "${GITHUB_REF_NAME}"
-            --title "${GITHUB_REF_NAME}"
-            --generate-notes
-            --verify-tag
-          )
+          if ($env:GITHUB_REF_NAME.Contains("-")) {
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag --prerelease
+          } else {
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag
+          }
 
-          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
-            release_options+=(--prerelease)
-          fi
-
-          gh release create "${release_options[@]}"
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }

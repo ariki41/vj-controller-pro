@@ -105,7 +105,7 @@ git tag -a v0.2.0 -m "v0.2.0"
 git push origin v0.2.0
 ```
 
-タグと`VERSION`が一致すると、GitHub ActionsがGitHub Releaseとリリースノートを自動作成します。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
+タグと`VERSION`が一致すると、GitHub ActionsがWindows 64-bit向けの単一実行ファイル`vj-controller-pro.exe`をビルドし、GitHub Releaseとリリースノートを自動作成します。カスタムRelease assetには、この実行ファイル以外を添付しません。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
 
 ## レビューの観点
 
