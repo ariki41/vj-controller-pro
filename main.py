@@ -20,15 +20,13 @@ with open(VERSION_FILE, encoding="utf-8") as version_file:
 
 app = FastAPI(title="VJ Controller Pro", version=APP_VERSION)
 
-VIDEO_DIR = os.path.join(APPLICATION_DIR, "videos")
+VIDEO_DIR = os.path.normpath(os.path.join(APPLICATION_DIR, "videos"))
+PUBLIC_DIR = os.path.normpath(os.path.join(RESOURCE_DIR, "public"))
+
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
-app.mount(
-    "/static",
-    StaticFiles(directory=os.path.join(RESOURCE_DIR, "public"), html=True),
-    name="public",
-)
+app.mount("/static", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
 
 dl_status = {"current": None}
 
@@ -85,4 +83,8 @@ if __name__ == "__main__":
     if "--version" in sys.argv:
         print(APP_VERSION)
     else:
+        print("\n" + "="*60)
+        print("VJ Controller Pro 起動準備完了")
+        print("プレーヤーURL➡ http://localhost:8000/static/control.html")
+        print("="*60 + "\n")
         uvicorn.run(app, host="0.0.0.0", port=8000)

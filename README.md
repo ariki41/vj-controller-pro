@@ -27,7 +27,7 @@
 3. ブラウザーでコントローラー画面を開きます。
 
 ```text
-http://localhost:8000/static/index.html
+http://localhost:8000/static/control.html
 ```
 
 起動中はコンソールを閉じないでください。Windows Defenderファイアウォールの確認が表示された場合は、信頼できるプライベートネットワークだけを許可してください。
@@ -72,7 +72,7 @@ PowerShellでexeのあるフォルダを開き、次を実行します。
 ### 画面を開けない
 
 - `vj-controller-pro.exe`のコンソールが起動中か確認します。
-- URLが`http://localhost:8000/static/index.html`になっているか確認します。
+- URLが`http://localhost:8000/static/control.html`になっているか確認します。
 - ポート8000を別のアプリが使用していないか確認します。
 
 ### 素材が表示されない
@@ -96,7 +96,7 @@ project_root/
   ├─ requirements.txt
   ├─ videos/
   └─ public/
-      ├─ index.html
+      ├─ control.html
       └─ stage.html
 ```
 
