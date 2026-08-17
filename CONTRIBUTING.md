@@ -84,6 +84,29 @@ git diff --check
 
 作成者自身による承認だけでマージせず、原則として1人以上の別の開発者による承認を受けてください。
 
+## リリース
+
+バージョン番号にはSemantic Versioningを使用します。
+
+- 互換性のあるバグ修正ではPATCHを上げます（例: `0.1.0`から`0.1.1`）。
+- 互換性のある機能追加ではMINORを上げます（例: `0.1.1`から`0.2.0`）。
+- 安定版で破壊的変更を行う場合はMAJORを上げます（例: `1.2.0`から`2.0.0`）。
+
+リリース担当者は次の手順で作業します。
+
+1. `release/vX.Y.Z`ブランチで`VERSION`と`CHANGELOG.md`を更新します。
+2. Pull RequestのレビューとCI成功を確認して`main`へマージします。
+3. 最新の`main`に注釈付きタグを作成し、GitHubへpushします。
+
+```bash
+git switch main
+git pull --ff-only
+git tag -a v0.2.0 -m "v0.2.0"
+git push origin v0.2.0
+```
+
+タグと`VERSION`が一致すると、GitHub ActionsがGitHub Releaseとリリースノートを自動作成します。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
+
 ## レビューの観点
 
 - Issueの完了条件を満たしているか

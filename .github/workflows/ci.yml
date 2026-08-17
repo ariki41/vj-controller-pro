@@ -43,3 +43,6 @@ jobs:
 
       - name: Check application import
         run: python -c "import main"
+
+      - name: Check application version
+        run: python -c "import main; assert main.app.version == open('VERSION', encoding='utf-8').read().strip()"
