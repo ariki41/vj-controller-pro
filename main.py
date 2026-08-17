@@ -9,11 +9,14 @@ import yt_dlp
 app = FastAPI()
 
 OS_DIR = os.path.dirname(os.path.abspath(__file__))
-VIDEO_DIR = os.path.join(OS_DIR, "videos")
+VIDEO_DIR = os.path.normpath(os.path.join(OS_DIR, "videos"))
+PUBLIC_DIR = os.path.normpath(os.path.join(OS_DIR, "public"))
+
 os.makedirs(VIDEO_DIR, exist_ok=True)
+os.makedirs(PUBLIC_DIR, exist_ok=True)
 
 app.mount("/videos", StaticFiles(directory=VIDEO_DIR), name="videos")
-app.mount("/static", StaticFiles(directory=os.path.join(OS_DIR, "public"), html=True), name="public")
+app.mount("/static", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
 
 dl_status = {"current": None}
 
@@ -36,6 +39,9 @@ def download_video(url: str):
         'noplaylist': True,
         'quiet': True,
         'progress_hooks': [my_hook],
+        'nocheckcertificate': True,
+        'rm_cache_dir': True,
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -67,4 +73,8 @@ async def upload_video(file: UploadFile = File(...)):
     return {"status": "success", "filename": file.filename}
 
 if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("VJ Controller Pro 起動準備完了")
+    print(f"プレーヤーURL➡ http://localhost:8000/static/control.html")
+    print("="*60 + "\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)
