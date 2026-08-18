@@ -105,7 +105,13 @@ git tag -a v0.2.0 -m "v0.2.0"
 git push origin v0.2.0
 ```
 
-タグと`VERSION`が一致すると、GitHub ActionsがWindows 64-bit向けの単一実行ファイル`vj-controller-pro.exe`をビルドし、GitHub Releaseとリリースノートを自動作成します。カスタムRelease assetには、この実行ファイル以外を添付しません。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
+タグと`VERSION`が一致すると、GitHub ActionsがWindows 64-bit向けの単一実行ファイル`vj-controller-pro.exe`をビルドします。SignPath連携後は、未署名の成果物をSignPathへ送信し、Approverによる手動承認とAuthenticode署名の検証が完了した実行ファイルだけをGitHub Releaseへ添付します。詳細は[Code signing policy](CODE_SIGNING_POLICY.md)を参照してください。
+
+カスタムRelease assetには、この実行ファイル以外を添付しません。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
+
+## ライセンス
+
+このプロジェクトへのコントリビューションは、リポジトリの[MIT License](LICENSE)に基づいて公開されます。
 
 ## レビューの観点
 
