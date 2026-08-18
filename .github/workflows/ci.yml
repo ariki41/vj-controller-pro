@@ -47,6 +47,9 @@ jobs:
       - name: Check application version
         run: python -c "import main; assert main.app.version == open('VERSION', encoding='utf-8').read().strip()"
 
+      - name: Generate Windows version resource
+        run: python scripts/generate_windows_version_info.py
+
   build-windows:
     name: Windows executable
     runs-on: windows-latest
@@ -65,6 +68,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt -r requirements-build.txt
 
+      - name: Generate Windows version resource
+        run: python scripts/generate_windows_version_info.py
+
       - name: Build executable
         run: >-
           python -m PyInstaller
@@ -72,6 +78,7 @@ jobs:
           --clean
           --onefile
           --name vj-controller-pro
+          --version-file "build/windows-version-info.txt"
           --add-data "public:public"
           --add-data "VERSION:."
           main.py
@@ -83,4 +90,12 @@ jobs:
           $actualVersion = (& .\dist\vj-controller-pro.exe --version | Out-String).Trim()
           if ($actualVersion -ne $expectedVersion) {
             throw "Executable version $actualVersion does not match VERSION $expectedVersion."
+          }
+
+          $versionInfo = (Get-Item .\dist\vj-controller-pro.exe).VersionInfo
+          if ($versionInfo.ProductName -ne "VJ Controller Pro") {
+            throw "Unexpected product name: $($versionInfo.ProductName)"
+          }
+          if ($versionInfo.ProductVersion -ne $expectedVersion) {
+            throw "Executable product version $($versionInfo.ProductVersion) does not match VERSION $expectedVersion."
           }
