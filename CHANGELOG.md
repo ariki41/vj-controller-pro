@@ -4,18 +4,16 @@
 
 バージョン番号は[Semantic Versioning](https://semver.org/lang/ja/)に従います。
 
-## [0.1.3] - 2026-08-19
+## [Unreleased]
 
 ### 追加
 
-- 固定メンバー向けの自己署名Authenticode証明書と信頼登録スクリプト
 - MIT License、コード署名ポリシー、プライバシーポリシー
 - Windows実行ファイルの製品名と製品バージョン情報
 
 ### 変更
 
-- GitHub Actionsで自己署名し、署名・証明書指紋・タイムスタンプを検証した実行ファイルだけをReleaseへ公開
-- Releaseへ公開証明書、信頼登録スクリプト、SHA-256チェックサムを同梱
+- Windows実行ファイルのコード署名方式をSignPath Foundationへ統一
 
 ## [0.1.2] - 2026-08-18
 
@@ -46,7 +44,7 @@
 - Python 3.10／3.13を対象としたCI
 - バージョン管理とタグ連動のGitHub Release自動作成
 
-[0.1.3]: https://github.com/ariki41/vj-controller-pro/compare/v0.1.2...v0.1.3
+[Unreleased]: https://github.com/ariki41/vj-controller-pro/compare/v0.1.2...HEAD
 [0.1.2]: https://github.com/ariki41/vj-controller-pro/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ariki41/vj-controller-pro/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ariki41/vj-controller-pro/releases/tag/v0.1.0
