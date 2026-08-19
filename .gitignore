@@ -11,11 +11,6 @@ dist/
 .env
 .env.*
 !.env.example
-*.key
-*.p12
-*.pfx
-signing-password.txt
-pfx-password.txt
 
 # Downloaded and uploaded media
 videos/*

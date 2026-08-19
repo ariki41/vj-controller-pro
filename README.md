@@ -15,19 +15,10 @@
 ### ダウンロード
 
 1. [最新のGitHub Release](https://github.com/ariki41/vj-controller-pro/releases/latest)を開きます。
-2. `Assets`から次の4ファイルをダウンロードします。
-   - `vj-controller-pro.exe`
-   - `vj-controller-pro-code-signing.cer`
-   - `install-windows-signing-certificate.ps1`
-   - `SHA256SUMS.txt`
-3. 4ファイルを`ドキュメント\VJControllerPro`など、書き込み可能な同じフォルダへ移動します。
-4. 初回のみPowerShellでそのフォルダを開き、公開証明書を現在のWindowsユーザーへ登録します。
+2. `Assets`から`vj-controller-pro.exe`をダウンロードします。
+3. `ドキュメント\VJControllerPro`など、書き込み可能なフォルダへexeを移動します。
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install-windows-signing-certificate.ps1
-```
-
-証明書の登録後、通常利用で起動するファイルは`vj-controller-pro.exe`だけです。GitHubが自動表示する`Source code (zip)`と`Source code (tar.gz)`は開発者向けであり、アプリの実行には使用しません。
+通常利用で必要なファイルは`vj-controller-pro.exe`だけです。GitHubが自動表示する`Source code (zip)`と`Source code (tar.gz)`は開発者向けであり、アプリの実行には使用しません。
 
 ### 起動
 
@@ -41,7 +32,7 @@ http://localhost:8000/static/control.html
 
 起動中はコンソールを閉じないでください。Windows Defenderファイアウォールの確認が表示された場合は、信頼できるプライベートネットワークだけを許可してください。
 
-`v0.1.3`以降の実行ファイルは、固定メンバー向けの自己署名証明書で署名します。自己署名証明書はWindowsから標準では信頼されないため、初回に上記の登録が必要です。証明書の指紋、署名確認、信頼解除については[固定メンバー向け自己署名証明書](docs/SELF_SIGNED_CERTIFICATE.md)を確認してください。
+署名されていないアプリとしてMicrosoft Defender SmartScreenが警告する場合があります。GitHubのこのリポジトリから直接ダウンロードしたファイルであることを確認したうえで実行してください。
 
 ### 素材ファイル
 
@@ -135,13 +126,7 @@ Windows PowerShellで仮想環境を有効化する場合:
 
 現在のバージョンは[VERSION](VERSION)、変更内容は[CHANGELOG.md](CHANGELOG.md)で管理します。
 
-カスタムRelease assetとして、Windows 64-bit向けの`vj-controller-pro.exe`、公開証明書、信頼登録スクリプト、SHA-256チェックサムを添付します。
-
-## Code signing policy
-
-公式Windows実行ファイルの署名対象、ビルド元、承認者、検証手順は[Code signing policy](CODE_SIGNING_POLICY.md)に記載しています。
-
-この自己署名は固定メンバー向けです。Microsoftや公開認証局による発行者の本人確認を示すものではなく、一般公開配布でSmartScreenの信頼を得る用途には使用しません。
+カスタムRelease assetとして添付する配布物は、Windows 64-bit向けの`vj-controller-pro.exe`のみです。
 
 ## プライバシー
 

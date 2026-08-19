@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "v*.*.*"
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -30,26 +29,9 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          if ("${{ github.event_name }}" -eq "push") {
-            $expectedTag = "v$version"
-            if ($env:GITHUB_REF_NAME -ne $expectedTag) {
-              throw "Tag $env:GITHUB_REF_NAME does not match VERSION ($expectedTag)."
-            }
-          } elseif ($env:GITHUB_REF -ne "refs/heads/main") {
-            throw "Manual release validation must run from main."
-          }
-
-      - name: Verify self-signed certificate configuration
-        shell: pwsh
-        env:
-          CODE_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_BASE64 }}
-          CODE_SIGNING_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_PASSWORD }}
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:CODE_SIGNING_PFX_BASE64)) {
-            throw "WINDOWS_CODE_SIGNING_PFX_BASE64 is not configured."
-          }
-          if ([string]::IsNullOrWhiteSpace($env:CODE_SIGNING_PASSWORD)) {
-            throw "WINDOWS_CODE_SIGNING_PASSWORD is not configured."
+          $expectedTag = "v$version"
+          if ($env:GITHUB_REF_NAME -ne $expectedTag) {
+            throw "Tag $env:GITHUB_REF_NAME does not match VERSION ($expectedTag)."
           }
 
       - name: Install dependencies
@@ -89,112 +71,7 @@ jobs:
             throw "Executable product version $($versionInfo.ProductVersion) does not match VERSION $expectedVersion."
           }
 
-      - name: Sign and verify executable
-        shell: pwsh
-        env:
-          CODE_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_BASE64 }}
-          CODE_SIGNING_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_PASSWORD }}
-        run: |
-          $expectedThumbprint = "743A44349826D9D8C7367487FBBD81BE74E5C34B"
-          $publicCertificatePath = (Resolve-Path ".\certs\vj-controller-pro-code-signing.cer").Path
-          $signedPath = (Resolve-Path ".\dist\vj-controller-pro.exe").Path
-          $pfxPath = Join-Path $env:RUNNER_TEMP "vj-controller-pro-code-signing.pfx"
-          $pfxCertificate = $null
-
-          try {
-            $pfxBytes = [Convert]::FromBase64String($env:CODE_SIGNING_PFX_BASE64.Trim())
-            [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
-
-            $storageFlags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet
-            $pfxCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
-              $pfxPath,
-              $env:CODE_SIGNING_PASSWORD,
-              $storageFlags
-            )
-            $publicCertificate = Get-PfxCertificate -FilePath $publicCertificatePath
-            $pfxThumbprint = ($pfxCertificate.Thumbprint -replace "\s", "").ToUpperInvariant()
-            $publicThumbprint = ($publicCertificate.Thumbprint -replace "\s", "").ToUpperInvariant()
-
-            if (-not $pfxCertificate.HasPrivateKey) {
-              throw "The configured PFX does not contain a private key."
-            }
-            if ($pfxThumbprint -ne $expectedThumbprint -or $publicThumbprint -ne $expectedThumbprint) {
-              throw "The signing certificate does not match the published certificate."
-            }
-            if ($publicCertificate.NotAfter.ToUniversalTime() -le [DateTime]::UtcNow) {
-              throw "The signing certificate has expired."
-            }
-
-            $signTool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match "\\x64\\signtool\.exe$" } |
-              Sort-Object FullName -Descending |
-              Select-Object -First 1
-            if ($null -eq $signTool) {
-              throw "signtool.exe was not found on the GitHub-hosted runner."
-            }
-
-            & $signTool.FullName sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f $pfxPath /p $env:CODE_SIGNING_PASSWORD /d "VJ Controller Pro" /du "https://github.com/ariki41/vj-controller-pro" $signedPath
-            if ($LASTEXITCODE -ne 0) {
-              throw "signtool.exe failed to sign the executable."
-            }
-
-            $signature = Get-AuthenticodeSignature $signedPath
-            if ($signature.Status -eq "HashMismatch") {
-              throw "The signed executable has been modified after signing."
-            }
-            if ($signature.Status -eq "UnknownError") {
-              $untrustedRootMessage = "terminated in a root certificate which is not trusted"
-              if (-not $signature.StatusMessage.Contains($untrustedRootMessage, [System.StringComparison]::OrdinalIgnoreCase)) {
-                throw "Unexpected Authenticode verification error: $($signature.StatusMessage)"
-              }
-              Write-Output "The Authenticode signature is intact; the clean runner does not trust the self-signed root, as expected."
-            } elseif ($signature.Status -ne "Valid") {
-              throw "Authenticode signature verification failed: $($signature.Status) - $($signature.StatusMessage)"
-            }
-            if ($null -eq $signature.SignerCertificate) {
-              throw "The executable does not contain an Authenticode signer certificate."
-            }
-            $signerThumbprint = ($signature.SignerCertificate.Thumbprint -replace "\s", "").ToUpperInvariant()
-            if ($signerThumbprint -ne $expectedThumbprint) {
-              throw "Unexpected signer thumbprint: $signerThumbprint"
-            }
-            if ($null -eq $signature.TimeStamperCertificate) {
-              throw "The Authenticode signature does not contain a trusted timestamp."
-            }
-
-            $expectedVersion = (Get-Content VERSION -Raw).Trim()
-            $actualVersion = (& $signedPath --version | Out-String).Trim()
-            if ($actualVersion -ne $expectedVersion) {
-              throw "Signed executable version $actualVersion does not match VERSION $expectedVersion."
-            }
-          } finally {
-            if ($null -ne $pfxCertificate) {
-              $pfxCertificate.Dispose()
-            }
-            if (Test-Path -LiteralPath $pfxPath) {
-              Remove-Item -LiteralPath $pfxPath -Force
-            }
-          }
-
-      - name: Prepare release assets
-        shell: pwsh
-        run: |
-          Copy-Item ".\certs\vj-controller-pro-code-signing.cer" ".\dist\vj-controller-pro-code-signing.cer"
-          Copy-Item ".\scripts\install_windows_signing_certificate.ps1" ".\dist\install-windows-signing-certificate.ps1"
-
-          $assetNames = @(
-            "vj-controller-pro.exe",
-            "vj-controller-pro-code-signing.cer",
-            "install-windows-signing-certificate.ps1"
-          )
-          $checksums = foreach ($assetName in $assetNames) {
-            $hash = (Get-FileHash ".\dist\$assetName" -Algorithm SHA256).Hash.ToLowerInvariant()
-            "$hash  $assetName"
-          }
-          $checksums | Set-Content ".\dist\SHA256SUMS.txt" -Encoding ascii
-
       - name: Create GitHub Release
-        if: github.event_name == 'push'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -206,9 +83,9 @@ jobs:
           }
 
           if ($env:GITHUB_REF_NAME.Contains("-")) {
-            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe .\dist\vj-controller-pro-code-signing.cer .\dist\install-windows-signing-certificate.ps1 .\dist\SHA256SUMS.txt --title $env:GITHUB_REF_NAME --generate-notes --verify-tag --prerelease
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag --prerelease
           } else {
-            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe .\dist\vj-controller-pro-code-signing.cer .\dist\install-windows-signing-certificate.ps1 .\dist\SHA256SUMS.txt --title $env:GITHUB_REF_NAME --generate-notes --verify-tag
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag
           }
 
           if ($LASTEXITCODE -ne 0) {
