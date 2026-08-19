@@ -96,18 +96,20 @@ git diff --check
 
 1. `release/vX.Y.Z`ブランチで`VERSION`と`CHANGELOG.md`を更新します。
 2. Pull RequestのレビューとCI成功を確認して`main`へマージします。
-3. 最新の`main`に注釈付きタグを作成し、GitHubへpushします。
+3. `main`からRelease workflowを手動実行し、署名のドライランが成功することを確認します。
+4. 最新の`main`に注釈付きタグを作成し、GitHubへpushします。
 
 ```bash
 git switch main
 git pull --ff-only
+gh workflow run Release --ref main
 git tag -a v0.2.0 -m "v0.2.0"
 git push origin v0.2.0
 ```
 
-タグと`VERSION`が一致すると、GitHub ActionsがWindows 64-bit向けの単一実行ファイル`vj-controller-pro.exe`をビルドします。SignPath連携後は、未署名の成果物をSignPathへ送信し、Approverによる手動承認とAuthenticode署名の検証が完了した実行ファイルだけをGitHub Releaseへ添付します。詳細は[Code signing policy](CODE_SIGNING_POLICY.md)を参照してください。
+タグと`VERSION`が一致すると、GitHub ActionsがWindows 64-bit向けの単一実行ファイル`vj-controller-pro.exe`をビルドし、固定メンバー向けの自己署名Authenticode証明書で署名します。証明書指紋、タイムスタンプ、アプリと製品のバージョンを検証した実行ファイルだけをGitHub Releaseへ添付します。詳細は[Code signing policy](CODE_SIGNING_POLICY.md)を参照してください。
 
-カスタムRelease assetには、この実行ファイル以外を添付しません。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
+カスタムRelease assetには、実行ファイル、公開証明書、信頼登録スクリプト、SHA-256チェックサムを添付します。公開済みタグの移動や再利用はせず、修正は新しいPATCHバージョンとしてリリースしてください。
 
 ## ライセンス
 
