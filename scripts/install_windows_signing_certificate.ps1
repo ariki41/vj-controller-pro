@@ -8,13 +8,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $expectedThumbprint = "743A44349826D9D8C7367487FBBD81BE74E5C34B"
-$storePaths = @(
-    "Cert:\CurrentUser\Root",
-    "Cert:\CurrentUser\TrustedPublisher"
-)
+$storeNames = @("Root", "TrustedPublisher")
 
 if ($Remove) {
-    foreach ($storePath in $storePaths) {
+    foreach ($storeName in $storeNames) {
+        $storePath = "Cert:\CurrentUser\$storeName"
         $installedPath = Join-Path $storePath $expectedThumbprint
         if (Test-Path -LiteralPath $installedPath) {
             if ($PSCmdlet.ShouldProcess($installedPath, "Remove trusted certificate")) {
@@ -41,11 +39,15 @@ if ($certificate.NotAfter.ToUniversalTime() -le [DateTime]::UtcNow) {
 
 Write-Warning "This self-signed certificate trusts applications signed by VJ Controller Pro for the current Windows user. Continue only if you received these files from the official GitHub Release."
 
-foreach ($storePath in $storePaths) {
+foreach ($storeName in $storeNames) {
+    $storePath = "Cert:\CurrentUser\$storeName"
     $installedPath = Join-Path $storePath $expectedThumbprint
     if (-not (Test-Path -LiteralPath $installedPath)) {
         if ($PSCmdlet.ShouldProcess($storePath, "Import VJ Controller Pro certificate")) {
-            Import-Certificate -FilePath $resolvedCertificatePath -CertStoreLocation $storePath | Out-Null
+            & certutil.exe -user -f -addstore $storeName $resolvedCertificatePath | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                throw "certutil.exe could not add the certificate to the current user's $storeName store."
+            }
         }
     }
 }

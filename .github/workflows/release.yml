@@ -138,8 +138,12 @@ jobs:
               throw "signtool.exe failed to sign the executable."
             }
 
-            Import-Certificate -FilePath $publicCertificatePath -CertStoreLocation "Cert:\CurrentUser\Root" | Out-Null
-            Import-Certificate -FilePath $publicCertificatePath -CertStoreLocation "Cert:\CurrentUser\TrustedPublisher" | Out-Null
+            foreach ($storeName in @("Root", "TrustedPublisher")) {
+              & certutil.exe -user -f -addstore $storeName $publicCertificatePath | Out-Null
+              if ($LASTEXITCODE -ne 0) {
+                throw "certutil.exe could not add the certificate to the current user's $storeName store."
+              }
+            }
 
             $signature = Get-AuthenticodeSignature $signedPath
             if ($signature.Status -ne "Valid") {
