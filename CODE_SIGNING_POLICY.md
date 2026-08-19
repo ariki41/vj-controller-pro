@@ -50,7 +50,7 @@ Release workflowはPFXをrunnerの一時ディレクトリにだけ復元し、�
 
 ## 利用者による信頼と解除
 
-固定メンバーは[自己署名証明書の利用手順](docs/SELF_SIGNED_CERTIFICATE.md)に従い、公開証明書の指紋を確認してから現在のWindowsユーザーの`TrustedPeople`と`TrustedPublisher`へ登録します。CAではないこの証明書をTrusted Root Certification Authoritiesへ登録しません。メンバーから外れた場合や利用を終了する場合は、同梱スクリプトの`-Remove`オプションで信頼を解除します。
+固定メンバーは[自己署名証明書の利用手順](docs/SELF_SIGNED_CERTIFICATE.md)に従い、公開証明書の指紋を確認してから現在のWindowsユーザーの`Root`と`TrustedPublisher`へ登録します。WindowsのTrusted Root Certification Authoritiesへの追加確認は、証明書と指紋が一致することを確認したうえで承認します。メンバーから外れた場合や利用を終了する場合は、同梱スクリプトの`-Remove`オプションで信頼を解除します。
 
 ## セキュリティとプライバシー
 

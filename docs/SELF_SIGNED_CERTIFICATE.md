@@ -33,7 +33,9 @@ Get-FileHash .\install-windows-signing-certificate.ps1 -Algorithm SHA256
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install-windows-signing-certificate.ps1
 ```
 
-証明書は`Cert:\CurrentUser\TrustedPeople`と`Cert:\CurrentUser\TrustedPublisher`へ登録されます。CAではない自己署名証明書をTrusted Root Certification Authoritiesへ登録しません。管理者権限や他ユーザーへの登録も行いません。
+WindowsからTrusted Root Certification Authoritiesへの追加確認が表示されたら、表示された証明書と上記の指紋が一致することを確認して承認します。証明書は現在のユーザーの`Cert:\CurrentUser\Root`と`Cert:\CurrentUser\TrustedPublisher`へ登録されます。管理者権限や他ユーザーへの登録は行いません。
+
+`Root`への登録により、この証明書で署名されたファイルをWindowsが信頼するようになります。公式GitHub Releaseから入手し、指紋を確認したこの証明書だけを登録してください。
 
 ## 署名を確認する
 
@@ -55,4 +57,4 @@ $signature.SignerCertificate | Format-List Subject, Thumbprint, NotAfter
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install-windows-signing-certificate.ps1 -Remove
 ```
 
-現在のWindowsユーザーに登録した2か所の証明書だけを削除します。
+現在のWindowsユーザーの`Root`と`TrustedPublisher`へ登録した、この指紋の証明書だけを削除します。

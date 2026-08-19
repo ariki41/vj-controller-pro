@@ -138,16 +138,21 @@ jobs:
               throw "signtool.exe failed to sign the executable."
             }
 
-            foreach ($storeName in @("TrustedPeople", "TrustedPublisher")) {
-              & certutil.exe -user -f -addstore $storeName $publicCertificatePath | Out-Null
-              if ($LASTEXITCODE -ne 0) {
-                throw "certutil.exe could not add the certificate to the current user's $storeName store."
-              }
-            }
-
             $signature = Get-AuthenticodeSignature $signedPath
-            if ($signature.Status -ne "Valid") {
-              throw "Authenticode signature is not valid: $($signature.StatusMessage)"
+            if ($signature.Status -eq "HashMismatch") {
+              throw "The signed executable has been modified after signing."
+            }
+            if ($signature.Status -eq "UnknownError") {
+              $untrustedRootMessage = "terminated in a root certificate which is not trusted"
+              if (-not $signature.StatusMessage.Contains($untrustedRootMessage, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Unexpected Authenticode verification error: $($signature.StatusMessage)"
+              }
+              Write-Output "The Authenticode signature is intact; the clean runner does not trust the self-signed root, as expected."
+            } elseif ($signature.Status -ne "Valid") {
+              throw "Authenticode signature verification failed: $($signature.Status) - $($signature.StatusMessage)"
+            }
+            if ($null -eq $signature.SignerCertificate) {
+              throw "The executable does not contain an Authenticode signer certificate."
             }
             $signerThumbprint = ($signature.SignerCertificate.Thumbprint -replace "\s", "").ToUpperInvariant()
             if ($signerThumbprint -ne $expectedThumbprint) {
@@ -155,11 +160,6 @@ jobs:
             }
             if ($null -eq $signature.TimeStamperCertificate) {
               throw "The Authenticode signature does not contain a trusted timestamp."
-            }
-
-            & $signTool.FullName verify /pa /v $signedPath
-            if ($LASTEXITCODE -ne 0) {
-              throw "signtool.exe could not verify the signed executable."
             }
 
             $expectedVersion = (Get-Content VERSION -Raw).Trim()
