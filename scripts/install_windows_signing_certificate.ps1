@@ -8,7 +8,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $expectedThumbprint = "743A44349826D9D8C7367487FBBD81BE74E5C34B"
-$storeNames = @("Root", "TrustedPublisher")
+$storeNames = @("TrustedPeople", "TrustedPublisher")
 
 if ($Remove) {
     foreach ($storeName in $storeNames) {
