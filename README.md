@@ -32,7 +32,7 @@ http://localhost:8000/static/control.html
 
 起動中はコンソールを閉じないでください。Windows Defenderファイアウォールの確認が表示された場合は、信頼できるプライベートネットワークだけを許可してください。
 
-SignPathによるコード署名の導入を準備しています。導入前のReleaseではMicrosoft Defender SmartScreenが警告する場合があります。署名状況と公式配布物の定義は[Code signing policy](CODE_SIGNING_POLICY.md)を確認してください。
+署名されていないアプリとしてMicrosoft Defender SmartScreenが警告する場合があります。GitHubのこのリポジトリから直接ダウンロードしたファイルであることを確認したうえで実行してください。
 
 ### 素材ファイル
 
@@ -127,14 +127,6 @@ Windows PowerShellで仮想環境を有効化する場合:
 現在のバージョンは[VERSION](VERSION)、変更内容は[CHANGELOG.md](CHANGELOG.md)で管理します。
 
 カスタムRelease assetとして添付する配布物は、Windows 64-bit向けの`vj-controller-pro.exe`のみです。
-
-## Code signing policy
-
-Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
-
-公式Windows実行ファイルの署名対象、ビルド元、承認者、検証手順は[Code signing policy](CODE_SIGNING_POLICY.md)に記載しています。
-
-SignPath Foundationの審査通過後に必要な設定は[SignPath Foundation導入手順](docs/SIGNPATH_SETUP.md)に記載しています。
 
 ## プライバシー
 

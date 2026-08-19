@@ -6,7 +6,6 @@ on:
       - "v*.*.*"
 
 permissions:
-  actions: read
   contents: write
 
 concurrency:
@@ -33,27 +32,6 @@ jobs:
           $expectedTag = "v$version"
           if ($env:GITHUB_REF_NAME -ne $expectedTag) {
             throw "Tag $env:GITHUB_REF_NAME does not match VERSION ($expectedTag)."
-          }
-
-      - name: Verify SignPath configuration
-        shell: pwsh
-        env:
-          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
-          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-        run: |
-          $requiredValues = @{
-            SIGNPATH_API_TOKEN = $env:SIGNPATH_API_TOKEN
-            SIGNPATH_ORGANIZATION_ID = $env:SIGNPATH_ORGANIZATION_ID
-            SIGNPATH_PROJECT_SLUG = $env:SIGNPATH_PROJECT_SLUG
-            SIGNPATH_SIGNING_POLICY_SLUG = $env:SIGNPATH_SIGNING_POLICY_SLUG
-          }
-          $missingValues = @($requiredValues.Keys | Where-Object {
-            [string]::IsNullOrWhiteSpace($requiredValues[$_])
-          })
-          if ($missingValues.Count -gt 0) {
-            throw "SignPath configuration is incomplete: $($missingValues -join ', ')"
           }
 
       - name: Install dependencies
@@ -93,48 +71,6 @@ jobs:
             throw "Executable product version $($versionInfo.ProductVersion) does not match VERSION $expectedVersion."
           }
 
-      - name: Upload unsigned artifact for SignPath
-        id: upload-unsigned-artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: vj-controller-pro-unsigned-${{ github.sha }}
-          path: .\dist\vj-controller-pro.exe
-          if-no-files-found: error
-          retention-days: 1
-          archive: false
-
-      - name: Submit signing request to SignPath
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-          github-artifact-id: ${{ steps.upload-unsigned-artifact.outputs.artifact-id }}
-          wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 1800
-          output-artifact-directory: ${{ github.workspace }}\dist-signed
-          skip-decompress: true
-
-      - name: Verify signed executable
-        shell: pwsh
-        run: |
-          $signedPath = ".\dist-signed\vj-controller-pro.exe"
-          if (-not (Test-Path $signedPath)) {
-            throw "Signed executable was not downloaded from SignPath."
-          }
-
-          $signature = Get-AuthenticodeSignature $signedPath
-          if ($signature.Status -ne "Valid") {
-            throw "Authenticode signature is not valid: $($signature.StatusMessage)"
-          }
-
-          $expectedVersion = (Get-Content VERSION -Raw).Trim()
-          $actualVersion = (& $signedPath --version | Out-String).Trim()
-          if ($actualVersion -ne $expectedVersion) {
-            throw "Signed executable version $actualVersion does not match VERSION $expectedVersion."
-          }
-
       - name: Create GitHub Release
         shell: pwsh
         env:
@@ -147,9 +83,9 @@ jobs:
           }
 
           if ($env:GITHUB_REF_NAME.Contains("-")) {
-            gh release create $env:GITHUB_REF_NAME .\dist-signed\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag --prerelease
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag --prerelease
           } else {
-            gh release create $env:GITHUB_REF_NAME .\dist-signed\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag
+            gh release create $env:GITHUB_REF_NAME .\dist\vj-controller-pro.exe --title $env:GITHUB_REF_NAME --generate-notes --verify-tag
           }
 
           if ($LASTEXITCODE -ne 0) {
