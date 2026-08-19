@@ -92,6 +92,23 @@ jobs:
             throw "Certificate installer script contains PowerShell syntax errors: $parseErrors"
           }
 
+      - name: Test certificate trust installer
+        shell: pwsh
+        run: |
+          $expectedThumbprint = "743A44349826D9D8C7367487FBBD81BE74E5C34B"
+          $scriptPath = ".\scripts\install_windows_signing_certificate.ps1"
+          try {
+            & $scriptPath -CertificatePath ".\certs\vj-controller-pro-code-signing.cer"
+            foreach ($storeName in @("TrustedPeople", "TrustedPublisher")) {
+              $installedPath = "Cert:\CurrentUser\$storeName\$expectedThumbprint"
+              if (-not (Test-Path -LiteralPath $installedPath)) {
+                throw "The installer did not add the certificate to $storeName."
+              }
+            }
+          } finally {
+            & $scriptPath -Remove
+          }
+
       - name: Generate Windows version resource
         run: python scripts/generate_windows_version_info.py
 

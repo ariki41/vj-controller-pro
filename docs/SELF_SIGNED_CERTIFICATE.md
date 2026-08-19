@@ -33,7 +33,7 @@ Get-FileHash .\install-windows-signing-certificate.ps1 -Algorithm SHA256
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\install-windows-signing-certificate.ps1
 ```
 
-証明書は`Cert:\CurrentUser\Root`と`Cert:\CurrentUser\TrustedPublisher`へ登録されます。管理者権限や他ユーザーへの登録は行いません。
+証明書は`Cert:\CurrentUser\TrustedPeople`と`Cert:\CurrentUser\TrustedPublisher`へ登録されます。CAではない自己署名証明書をTrusted Root Certification Authoritiesへ登録しません。管理者権限や他ユーザーへの登録も行いません。
 
 ## 署名を確認する
 
